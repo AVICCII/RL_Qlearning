@@ -10,7 +10,7 @@ EPSILON = 0.9  # greedy police
 ALPHA = 0.1  # learning rate
 LAMBDA = 0.9  # discount factor
 MAX_EPISODES = 13  # maximum episodes  最大回合数
-FRESH_TIME = 0.3  # fresh time for one move  走一步的时间
+FRESH_TIME = 0.1  # fresh time for one move  走一步的时间
 
 
 def build_q_table(n_states, actions):
@@ -18,7 +18,7 @@ def build_q_table(n_states, actions):
         np.zeros((n_states, len(actions))),  # q_table initial values
         columns=actions,  # action's name
     )
-    print(table)  # show table
+    # print(table)  # show table
     return table
 
 
@@ -39,17 +39,17 @@ def get_env_feedback(S, A):
     # This is how agent will interact with the environment
     if A == 'right':
         if S == N_STATES - 2:
-            S = 'terminal'
+            S_ = 'terminal'
             R = 1
         else:
-            S += 1
+            S_ = S + 1
             R = 0
     else:  # move left
         R = 0
         if S == 0:
             S_ = S  # reach the wall
         else:
-            S -= 1
+            S_ = S - 1
     return S_, R
 
 
@@ -79,16 +79,22 @@ def rl():
         while not is_terminated:
             A = choose_action(S, q_table)
             S_, R = get_env_feedback(S, A)  # take action & get next state and reward
-            q_predict = q_table.ix[S, A]
+            q_predict = q_table.loc[S, A]
             if S_ != 'terminal':
                 q_target = R + LAMBDA * q_table.iloc[S_, :].max()  # next state is not terminal
             else:
                 q_target = R  # next state is terminal
                 is_terminated = True  # terminate this episode
 
-            q_table.ix[S, A] += ALPHA * (q_target - q_predict)  # update
+            q_table.loc[S, A] += ALPHA * (q_target - q_predict)  # update
             S = S_  # move to next state
 
             update_env(S, episode, step_counter + 1)
             step_counter += 1
     return q_table
+
+
+if __name__ == '__main__':
+    q_table = rl()
+    print('\r\nQ-table:\n')
+    print(q_table)
